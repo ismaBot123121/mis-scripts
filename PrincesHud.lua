@@ -1,18 +1,14 @@
--- ============ SISTEMA DE KEY (PRINCES HUB) ============
+-- ============ SISTEMA DE KEY (PRINCES HUD) ============
 local correctKey = "humildeONhud"
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
 local keyGui = Instance.new("ScreenGui")
-keyGui.Name = "PrincesHubKeySystem"
+keyGui.Name = "PrincesHudKeySystem"
 keyGui.ResetOnSpawn = false
-
--- Compatibilidad con ejecutores móviles como Delta
-local success = pcall(function() keyGui.Parent = CoreGui end)
-if not success then 
-    keyGui.Parent = LocalPlayer:WaitForChild("PlayerGui") 
-end
+pcall(function() keyGui.Parent = CoreGui end)
+if not keyGui.Parent then keyGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
 
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, 300, 0, 160)
@@ -27,10 +23,10 @@ mainFrame.Parent = keyGui
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
 title.BackgroundTransparency = 1
-title.Text = "Princes Hub - Verificación"
+title.Text = "Princes Hud - Verificación"
 title.TextColor3 = Color3.fromRGB(255, 215, 0)
 title.Font = Enum.Font.SourceSansBold
-title.TextSize = 22
+title.TextSize = 20
 title.Parent = mainFrame
 
 local keyInput = Instance.new("TextBox")
@@ -38,374 +34,225 @@ keyInput.Size = UDim2.new(0.8, 0, 0, 35)
 keyInput.Position = UDim2.new(0.1, 0, 0.35, 0)
 keyInput.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 keyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-keyInput.PlaceholderText = "Ingresa la Key aquí..."
+keyInput.PlaceholderText = "Ingresa la Key..."
+keyInput.Text = ""
 keyInput.Font = Enum.Font.SourceSans
 keyInput.TextSize = 16
-keyInput.ClearTextOnFocus = false
 keyInput.Parent = mainFrame
 
 local submitBtn = Instance.new("TextButton")
 submitBtn.Size = UDim2.new(0.5, 0, 0, 35)
-submitBtn.Position = UDim2.new(0.25, 0, 0.65, 0)
+submitBtn.Position = UDim2.new(0.25, 0, 0.68, 0)
 submitBtn.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
 submitBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 submitBtn.Text = "Entrar"
 submitBtn.Font = Enum.Font.SourceSansBold
-submitBtn.TextSize = 18
+submitBtn.TextSize = 16
 submitBtn.Parent = mainFrame
 
 local keyPassed = false
-
 submitBtn.MouseButton1Click:Connect(function()
-    if keyInput.Text == correctKey then
-        submitBtn.Text = "¡Correcto!"
-        submitBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-        task.wait(0.5)
-        keyPassed = true
-        keyGui:Destroy()
-    else
-        submitBtn.Text = "Key Incorrecta"
-        submitBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-        task.wait(1.5)
-        submitBtn.Text = "Entrar"
-        submitBtn.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
-    end
+	if keyInput.Text == correctKey then
+		submitBtn.Text = "¡Correcto!"
+		submitBtn.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+		task.wait(0.5)
+		keyPassed = true
+		keyGui:Destroy()
+	else
+		submitBtn.Text = "Incorrecta"
+		submitBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+		task.wait(1)
+		submitBtn.Text = "Entrar"
+		submitBtn.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
+	end
 end)
 
--- Pausa el hilo actual hasta que la contraseña sea correcta
 repeat task.wait(0.2) until keyPassed
 
--- ============ SCRIPT PRINCIPAL (PRINCES HUB) ============
--- Librería interna basada en Elerium V2 + Funciones del Script
-local Library = {}
+-- ============ UI: Elerium v2 (estilo Silence, adaptador Rayfield) ============
+local GUI_LIB_URL = "https://raw.githubusercontent.com/momoneta/momoneta-hub/refs/heads/main/mome.lua"
+local library = loadstring(game:HttpGet(GUI_LIB_URL, true))()
+local _UIS_MOBILE = game:GetService("UserInputService")
+local _isMobileUI = _UIS_MOBILE.TouchEnabled and not _UIS_MOBILE.KeyboardEnabled
 
-function Library:Load()
-	local _UIS_MOBILE = game:GetService("UserInputService")
-	local _isMobileUI = _UIS_MOBILE.TouchEnabled and not _UIS_MOBILE.KeyboardEnabled
-	local RS = game:GetService("RunService")
-	local UIS = game:GetService("UserInputService")
-	local mouse = LocalPlayer:GetMouse()
-
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "PrincesHubGUI"
-	gui.ResetOnSpawn = false
-	if syn and syn.protect_gui then
-		syn.protect_gui(gui)
-		gui.Parent = game:GetService("CoreGui")
-	else
-		pcall(function() gui.Parent = game:GetService("CoreGui") end)
-		if not gui.Parent then
-			gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-		end
-	end
-
-	local prefabs = Instance.new("Folder")
-	prefabs.Name = "Prefabs"
-	prefabs.Parent = gui
-
-	local main_win = Instance.new("Frame")
-	main_win.Name = "Window"
-	main_win.Size = _isMobileUI and UDim2.new(0, 360, 0, 560) or UDim2.new(0, 500, 0, 620)
-	main_win.Position = UDim2.new(0.5, -180, 0.5, -280)
-	main_win.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-	main_win.BorderSizePixel = 0
-	main_win.Active = true
-	main_win.Draggable = true
-	main_win.Parent = gui
-
-	local top_bar = Instance.new("Frame")
-	top_bar.Name = "TopBar"
-	top_bar.Size = UDim2.new(1, 0, 0, 30)
-	top_bar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	top_bar.BorderSizePixel = 0
-	top_bar.Parent = main_win
-
-	local title_label = Instance.new("TextLabel")
-	title_label.Name = "Title"
-	title_label.Size = UDim2.new(1, -10, 1, 0)
-	title_label.Position = UDim2.new(0, 10, 0, 0)
-	title_label.BackgroundTransparency = 1
-	title_label.TextColor3 = Color3.fromRGB(255, 215, 0) 
-	title_label.TextSize = 16
-	title_label.Font = Enum.Font.SourceSansBold
-	title_label.TextXAlignment = Enum.TextXAlignment.Left
-	title_label.Text = "Princes Hub"
-	title_label.Parent = top_bar
-
-	local tab_selection = Instance.new("Frame")
-	tab_selection.Name = "TabSelection"
-	tab_selection.Size = UDim2.new(1, 0, 0, 30)
-	tab_selection.Position = UDim2.new(0, 0, 0, 30)
-	tab_selection.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-	tab_selection.BorderSizePixel = 0
-	tab_selection.Parent = main_win
-
-	local tab_buttons = Instance.new("ScrollingFrame")
-	tab_buttons.Name = "TabButtons"
-	tab_buttons.Size = UDim2.new(1, 0, 1, 0)
-	tab_buttons.CanvasSize = UDim2.new(2, 0, 0, 0)
-	tab_buttons.BackgroundTransparency = 1
-	tab_buttons.ScrollBarThickness = 0
-	tab_buttons.Parent = tab_selection
-
-	local ui_list = Instance.new("UIListLayout")
-	ui_list.FillDirection = Enum.FillDirection.Horizontal
-	ui_list.SortOrder = Enum.SortOrder.LayoutOrder
-	ui_list.Parent = tab_buttons
-
-	local tabs_holder = Instance.new("Folder")
-	tabs_holder.Name = "Tabs"
-	tabs_holder.Parent = main_win
-
-	local function createPrefab(name, class)
-		local p = Instance.new(class)
-		p.Name = name
-		p.Visible = false
-		p.Parent = prefabs
-		return p
-	end
-
-	local pf_btn = createPrefab("TabButton", "TextButton")
-	pf_btn.Size = UDim2.new(0, 100, 1, 0)
-	pf_btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-	pf_btn.TextSize = 14
-	pf_btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	local img_btn = Instance.new("ImageLabel")
-	img_btn.Size = UDim2.new(1, 0, 1, 0)
-	img_btn.BackgroundTransparency = 1
-	img_btn.ImageColor3 = Color3.fromRGB(52, 53, 56)
-	img_btn.Parent = pf_btn
-
-	local pf_tab = createPrefab("Tab", "ScrollingFrame")
-	pf_tab.Size = UDim2.new(1, 0, 1, -60)
-	pf_tab.Position = UDim2.new(0, 0, 0, 60)
-	pf_tab.BackgroundTransparency = 1
-	pf_tab.ScrollBarThickness = 4
-	local t_layout = Instance.new("UIListLayout")
-	t_layout.SortOrder = Enum.SortOrder.LayoutOrder
-	t_layout.Parent = pf_tab
-
-	createPrefab("Label", "TextLabel")
-	createPrefab("Button", "TextButton")
-	createPrefab("Switch", "TextButton")
-	createPrefab("TextBox", "TextBox")
-	createPrefab("Slider", "Frame")
-	createPrefab("Keybind", "Frame")
-	createPrefab("Dropdown", "TextButton")
-	createPrefab("ColorPicker", "Frame")
-	createPrefab("Console", "Frame")
-	createPrefab("HorizontalAlignment", "Frame")
-	createPrefab("Folder", "Frame")
-
-	local window_data = {}
-	local dropdown_open = false
-
-	local function gNameLen(obj)
-		return #obj.Text * 8 + 20
-	end
-
-	local function Resize(obj, goals, t)
-		local info = TweenInfo.new(t or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-		game:GetService("TweenService"):Create(obj, info, goals):Play()
-	end
-
-	function window_data:AddTab(tab_name)
-		local tab_data = {}
-		tab_name = tostring(tab_name or "New Tab")
-		tab_selection.Visible = true
-
-		local new_button = pf_btn:Clone()
-		new_button.Visible = true
-		new_button.Parent = tab_buttons
-		new_button.Text = tab_name
-		new_button.Size = UDim2.new(0, gNameLen(new_button), 1, 0)
-
-		local new_tab = pf_tab:Clone()
-		new_tab.Visible = false
-		new_tab.Parent = tabs_holder
-
-		local function show()
-			if dropdown_open then return end
-			for _, v in pairs(tab_buttons:GetChildren()) do
-				if v:IsA("TextButton") then
-					v.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-				end
-			end
-			for _, v in pairs(tabs_holder:GetChildren()) do
-				v.Visible = false
-			end
-			new_button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-			new_tab.Visible = true
-		end
-
-		new_button.MouseButton1Click:Connect(function() show() end)
-
-		if #tabs_holder:GetChildren() == 1 then show() end
-
-		function tab_data:AddLabel(text)
-			local lbl = Instance.new("TextLabel")
-			lbl.Size = UDim2.new(1, 0, 0, 25)
-			lbl.BackgroundTransparency = 1
-			lbl.TextColor3 = Color3.fromRGB(200, 200, 200)
-			lbl.TextSize = 14
-			lbl.Font = Enum.Font.SourceSans
-			lbl.TextXAlignment = Enum.TextXAlignment.Left
-			lbl.Text = "  " .. tostring(text)
-			lbl.Parent = new_tab
-			return { Set = function(_, t) lbl.Text = "  " .. tostring(t) end }
-		end
-
-		function tab_data:AddButton(text, callback)
-			local btn = Instance.new("TextButton")
-			btn.Size = UDim2.new(1, 0, 0, 30)
-			btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-			btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-			btn.TextSize = 14
-			btn.Font = Enum.Font.SourceSansBold
-			btn.Text = tostring(text)
-			btn.Parent = new_tab
-			btn.MouseButton1Click:Connect(function() pcall(callback) end)
-			return btn
-		end
-
-		function tab_data:AddToggle(opt)
-			local toggled = opt.CurrentValue or false
-			local btn = Instance.new("TextButton")
-			btn.Size = UDim2.new(1, 0, 0, 30)
-			btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-			btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-			btn.TextSize = 14
-			btn.Font = Enum.Font.SourceSans
-			btn.TextXAlignment = Enum.TextXAlignment.Left
-			btn.Text = "  " .. tostring(opt.Name) .. ": " .. (toggled and "[ON]" or "[OFF]")
-			btn.Parent = new_tab
-
-			btn.MouseButton1Click:Connect(function()
-				toggled = not toggled
-				btn.Text = "  " .. tostring(opt.Name) .. ": " .. (toggled and "[ON]" or "[OFF]")
-				pcall(opt.Callback, toggled)
+-- Modificado a nombre Princes Hud y colores dorados/negros
+local _eleriumWindow = library:AddWindow("Princes Hud", {
+	main_color = Color3.fromRGB(255, 215, 0),
+	bg_color = Color3.fromRGB(15, 15, 15),
+	min_size = _isMobileUI and Vector2.new(360, 560) or Vector2.new(500, 620),
+	can_resize = not _isMobileUI,
+})
+local Rayfield = {}
+function Rayfield:CreateWindow(_config)
+	local Window = {}
+	function Window:CreateTab(opt)
+		local name = type(opt) == "table" and (opt.name or opt.Name or "Tab") or tostring(opt)
+		local tab = _eleriumWindow:AddTab(name)
+		local T = {}
+		function T:CreateToggle(opt2)
+			local state = false
+			local busy = false
+			local sw = tab:AddSwitch(opt2.Name, function(v)
+				if busy then return end
+				state = v and true or false
+				pcall(opt2.Callback, state)
 			end)
-
+			if opt2.CurrentValue == true then
+				sw:Set(true)
+			end
 			return {
-				Set = function(_, val)
-					toggled = val
-					btn.Text = "  " .. tostring(opt.Name) .. ": " .. (toggled and "[ON]" or "[OFF]")
-					pcall(opt.Callback, toggled)
+				Set = function(_, v)
+					v = (v == true)
+					if state == v then return end
+					busy = true
+					sw:Set(v)
+					busy = false
+					state = v
+					pcall(opt2.Callback, v)
 				end,
-				Get = function() return toggled end
+				Get = function() return state end,
 			}
 		end
+		function T:CreateDropdown(opt2)
+			local dd = tab:AddDropdown(opt2.Name, function(sel)
+				pcall(opt2.Callback, sel)
+			end)
+			if type(opt2.Options) == "table" then
+				for _, op in ipairs(opt2.Options) do
+					pcall(function() dd:Add(op) end)
+				end
+			end
+			return dd
+		end
+		function T:CreateSlider(opt2)
+			local range = opt2.Range or { 1, 100 }
+			local inc = tonumber(opt2.Increment) or 1
+			local defVal = tonumber(opt2.CurrentValue or opt2.Default or range[1]) or range[1]
 
-		function tab_data:AddSlider(opt)
-			local range = opt.Range or {1, 100}
-			local def = opt.CurrentValue or range[1]
-			local current = def
+			local sl, sliderGui = tab:AddSlider(opt2.Name, function(v)
+				v = tonumber(v) or defVal
+				if inc >= 1 then v = math.floor(v + 0.5) end
+				v = math.clamp(v, range[1], range[2])
+				pcall(opt2.Callback, v)
+			end, { min = range[1], max = range[2], default = defVal })
 
-			local frame = Instance.new("Frame")
-			frame.Size = UDim2.new(1, 0, 0, 40)
-			frame.BackgroundTransparency = 1
-			frame.Parent = new_tab
+			if _isMobileUI and sliderGui then
+				pcall(function()
+					sliderGui.Active = true
+					local dragging = nil
+					local function updateTouch(x)
+						local left = sliderGui.AbsolutePosition.X
+						local width = math.max(sliderGui.AbsoluteSize.X, 1)
+						local percent = math.clamp(((x - left) / width) * 100, 0, 100)
+						pcall(function()
+							sl:Set(percent)
+						end)
+					end
 
-			local lbl = Instance.new("TextLabel")
-			lbl.Size = UDim2.new(1, 0, 0, 20)
-			lbl.BackgroundTransparency = 1
-			lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
-			lbl.TextSize = 14
-			lbl.Font = Enum.Font.SourceSans
-			lbl.TextXAlignment = Enum.TextXAlignment.Left
-			lbl.Text = "  " .. tostring(opt.Name) .. ": " .. tostring(def)
-			lbl.Parent = frame
+					sliderGui.InputBegan:Connect(function(input)
+						if input.UserInputType == Enum.UserInputType.Touch then
+							dragging = input
+							updateTouch(input.Position.X)
+						end
+					end)
 
-			local bar = Instance.new("TextButton")
-			bar.Size = UDim2.new(1, -10, 0, 10)
-			bar.Position = UDim2.new(0, 5, 0, 25)
-			bar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-			bar.Text = ""
-			bar.Parent = frame
+					sliderGui.InputChanged:Connect(function(input)
+						if input.UserInputType == Enum.UserInputType.Touch then
+							updateTouch(input.Position.X)
+						end
+					end)
 
-			local fill = Instance.new("Frame")
-			fill.Size = UDim2.new((def - range[1]) / (range[2] - range[1]), 0, 1, 0)
-			fill.BackgroundColor3 = Color3.fromRGB(255, 215, 0)
-			fill.BorderSizePixel = 0
-			fill.Parent = bar
+					UserInputService.InputChanged:Connect(function(input)
+						if dragging and input == dragging then
+							updateTouch(input.Position.X)
+						end
+					end)
 
-			local function update(input)
-				local pos = math.clamp((input.Position.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X, 0, 1)
-				current = math.floor(range[1] + ((range[2] - range[1]) * pos))
-				fill.Size = UDim2.new(pos, 0, 1, 0)
-				lbl.Text = "  " .. tostring(opt.Name) .. ": " .. tostring(current)
-				pcall(opt.Callback, current)
+					UserInputService.InputEnded:Connect(function(input)
+						if dragging and input == dragging then
+							dragging = nil
+						end
+					end)
+				end)
 			end
 
-			local dragging = false
-			bar.InputBegan:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-					dragging = true
-					update(input)
-				end
+			pcall(opt2.Callback, math.clamp(defVal, range[1], range[2]))
+			return sl
+		end
+		function T:CreateButton(opt2)
+			return tab:AddButton(opt2.Name, function()
+				pcall(opt2.Callback)
 			end)
-			UIS.InputEnded:Connect(function(input)
-				if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-					dragging = false
-				end
+		end
+		function T:CreateText(opt2)
+			local label = tab:AddLabel(opt2.Name or "")
+			if opt2.Description then
+				label.Text = tostring(opt2.Name or "") .. "\n" .. tostring(opt2.Description)
+			end
+			pcall(function()
+				label.TextTruncate = Enum.TextTruncate.AtEnd
+				label.TextXAlignment = Enum.TextXAlignment.Left
 			end)
-			UIS.InputChanged:Connect(function(input)
-				if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-					update(input)
-				end
-			end)
-
 			return {
-				Set = function(_, val)
-					current = math.clamp(val, range[1], range[2])
-					local pos = (current - range[1]) / (range[2] - range[1])
-					fill.Size = UDim2.new(pos, 0, 1, 0)
-					lbl.Text = "  " .. tostring(opt.Name) .. ": " .. tostring(current)
-					pcall(opt.Callback, current)
-				end
+				Set = function(_, t)
+					label.Text = tostring(t)
+					pcall(function()
+						label.Size = UDim2.new(1, -10, 0, 20)
+					end)
+				end,
 			}
 		end
-
-		function tab_data:AddDivider(text)
-			local lbl = Instance.new("TextLabel")
-			lbl.Size = UDim2.new(1, 0, 0, 25)
-			lbl.BackgroundTransparency = 1
-			lbl.TextColor3 = Color3.fromRGB(255, 215, 0)
-			lbl.TextSize = 13
-			lbl.Font = Enum.Font.SourceSansBold
-			lbl.TextXAlignment = Enum.TextXAlignment.Left
-			lbl.Text = "  --- " .. tostring(text or "") .. " ---"
-			lbl.Parent = new_tab
-			return lbl
+		function T:CreateDivider(opt2)
+			if type(opt2) == "table" then
+				tab:AddLabel(tostring(opt2.text or opt2.Text or ""))
+			else
+				tab:AddLabel(tostring(opt2 or ""))
+			end
 		end
-
-		return tab_data
+		return T
 	end
-
-	function window_data:Notify(opt)
+	function Window:Notify(opt2)
 		pcall(function()
 			game:GetService("StarterGui"):SetCore("SendNotification", {
-				Title = tostring(opt.Title or "Princes Hub"),
-				Text = tostring(opt.Content or ""),
-				Duration = tonumber(opt.Duration) or 3,
+				Title = tostring(opt2.Title or "Hub"),
+				Text = tostring(opt2.Content or opt2.Text or ""),
+				Duration = tonumber(opt2.Duration) or 3,
 			})
 		end)
 	end
-
-	return window_data
+	return Window
 end
 
-local Window = Library:Load()
+local Window = Rayfield:CreateWindow({
+	Name = "Princes Hud",
+	LoadingTitle = "Princes Hud",
+	LoadingSubtitle = "by Yail",
+	ConfigurationSaving = { Enabled = true, FolderName = "PrincesHud", FileName = "Config" },
+	KeySystem = false
+})
 
-local MainTab = Window:AddTab("Main")
-local FarmTab = Window:AddTab("Farm")
-local TravelTab = Window:AddTab("Islands")
-local ShopTab = Window:AddTab("Shop")
+local MainTab = Window:CreateTab({ name = "Main" })
+local FarmTab = Window:CreateTab({ name = "Farm" })
+local TravelTab = Window:CreateTab({ name = "Islands" })
+local ShopTab = Window:CreateTab({ name = "Shop" })
 
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CollectionService = game:GetService("CollectionService")
+local Lighting = game:GetService("Lighting")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+
 local muscleEvent = LocalPlayer:WaitForChild("muscleEvent")
+local equipPetEvent = ReplicatedStorage.rEvents:WaitForChild("equipPetEvent")
+local exclusiveEggOpenRemote = ReplicatedStorage.rEvents:WaitForChild("exclusiveEggOpenRemote")
+local enemyNPCs = Workspace:WaitForChild("enemyNPCs")
 local currentMap = LocalPlayer:WaitForChild("currentMap")
 local rebirthRemote = ReplicatedStorage.rEvents:WaitForChild("rebirthRemote")
+local machineInteractRemote = ReplicatedStorage.rEvents:WaitForChild("machineInteractRemote")
+local changeSpeedSizeRemote = ReplicatedStorage.rEvents:WaitForChild("changeSpeedSizeRemote")
 
 local function getSeat(h)
 	if not h then return nil end
@@ -432,11 +279,87 @@ local function getPunchTool()
 	return nil
 end
 
+local punchVisual = { character = nil, tracks = {} }
+local function clearPunchVisual()
+	for _, tr in pairs(punchVisual.tracks) do
+		pcall(function() tr:Stop(0.05) tr:Destroy() end)
+	end
+	punchVisual.character = nil
+	punchVisual.tracks = {}
+end
+local function playPunchVisual()
+	local c = LocalPlayer.Character
+	local h = c and c:FindFirstChildOfClass("Humanoid")
+	local animator = h and (h:FindFirstChildOfClass("Animator") or h:FindFirstChild("Animator"))
+	if not c or not animator then return end
+	if punchVisual.character ~= c or #punchVisual.tracks == 0 then
+		clearPunchVisual()
+		punchVisual.character = c
+		local shared = ReplicatedStorage:FindFirstChild("shared")
+		local assets = shared and shared:FindFirstChild("assets")
+		local anims = assets and assets:FindFirstChild("animations")
+		local gameAnims = anims and anims:FindFirstChild("gameAnims")
+		local tools = gameAnims and gameAnims:FindFirstChild("Tools")
+		local punch = tools and tools:FindFirstChild("Punch")
+		local attacks = punch and punch:FindFirstChild("attacks")
+		if attacks then
+			for _, a in pairs(attacks:GetChildren()) do
+				if a:IsA("Animation") then
+					local ok, track = pcall(animator.LoadAnimation, animator, a)
+					if ok and track then
+						track.Priority = Enum.AnimationPriority.Action
+						table.insert(punchVisual.tracks, track)
+					end
+				end
+			end
+		end
+	end
+	if #punchVisual.tracks == 0 then return end
+	for _, tr in pairs(punchVisual.tracks) do
+		if tr.IsPlaying then pcall(function() tr:Stop(0.02) end) end
+	end
+	pcall(function() punchVisual.tracks[1]:Play(0.02, 1, 1.8) end)
+end
+
+-- Rocks (Fast Glitch)
+local Rocks = {
+	{label="Industrial Rock", durability=25000000},
+	{label="Ancient Rock", durability=10000000},
+	{label="Muscle King Rock", durability=5000000},
+	{label="Legend Rock", durability=1000000},
+	{label="Eternal Rock", durability=750000},
+	{label="Mythical Rock", durability=400000},
+	{label="Frost Rock", durability=150000},
+	{label="Beach Rock", durability=5000},
+	{label="Starter Rock", durability=100},
+	{label="Tiny Rock", durability=0},
+}
+local selectedRock = nil
+local function findRock(durability)
+	local mf = Workspace:FindFirstChild("machinesFolder")
+	if not mf then return nil end
+	for _, d in ipairs(mf:GetDescendants()) do
+		if d.Name == "neededDurability" and d:IsA("ValueBase") and tonumber(d.Value) == durability then
+			local rock = d.Parent and d.Parent:FindFirstChild("Rock")
+			if rock and rock:IsA("BasePart") then return rock end
+		end
+	end
+	return nil
+end
+
 local function setFastPunch(on)
 	fastPunchGen += 1
 	local gen = fastPunchGen
 	fastPunch = on
-	if not fastPunch then return end
+	if not fastPunch then
+		clearPunchVisual()
+		local c = LocalPlayer.Character
+		local t = c and c:FindFirstChild("Punch")
+		local at = t and t:FindFirstChild("attackTime")
+		if at then at.Value = 0.3 end
+		if t and LocalPlayer:FindFirstChild("Backpack") then t.Parent = LocalPlayer.Backpack end
+		return
+	end
 	task.spawn(function()
 		while fastPunch and fastPunchGen == gen do
 			local t = getPunchTool()
@@ -452,57 +375,176 @@ local function setFastPunch(on)
 		end
 	end)
 	task.spawn(function()
+		local lastActivate = 0
 		while fastPunch and fastPunchGen == gen do
-			if not bossFightActive then
+			if bossFightActive then
+				local tBoss = getPunchTool()
+				if tBoss then
+					local atB = tBoss:FindFirstChild("attackTime")
+					if atB and atB.Value ~= 0 then pcall(function() atB.Value = 0 end) end
+				end
+				task.wait(0.5)
+			else
 				local me = LocalPlayer:FindFirstChild("muscleEvent")
+				local t = getPunchTool()
 				if me and me:IsA("RemoteEvent") then
 					pcall(function() me:FireServer("punch", "rightHand") end)
 					pcall(function() me:FireServer("punch", "leftHand") end)
 				end
+				if t and time() - lastActivate >= 0.25 then
+					lastActivate = time()
+					pcall(function() t:Activate() end)
+					playPunchVisual()
+				end
+				if selectedRock and type(firetouchinterest) == "function" then
+					local c = LocalPlayer.Character
+					local lh = c and c:FindFirstChild("LeftHand")
+					local rh = c and c:FindFirstChild("RightHand")
+					local rock = findRock(selectedRock)
+					if rock and lh and rh then
+						pcall(function() firetouchinterest(rock, rh, 0) end)
+						pcall(function() firetouchinterest(rock, rh, 1) end)
+						pcall(function() firetouchinterest(rock, lh, 0) end)
+						pcall(function() firetouchinterest(rock, lh, 1) end)
+					end
+				end
+				task.wait(0.05)
 			end
-			task.wait(0.05)
 		end
 	end)
 end
 
-MainTab:AddToggle({
+local fastPunchToggle = nil
+fastPunchToggle = MainTab:CreateToggle({
 	Name = "Fast Punch",
 	CurrentValue = false,
+	Flag = "FastPunch",
 	Callback = function(v)
 		setFastPunch(v)
-		Window:Notify({Title="Princes Hub", Content=v and "Fast Punch ON" or "Fast Punch OFF", Duration=2})
+		Window:Notify({Title="Princes Hud", Content=v and "Fast Punch ON" or "Fast Punch OFF", Duration=2})
 	end
 })
 
-local currentMapLabel = MainTab:AddLabel("Current: " .. tostring(currentMap.Value))
-currentMap.Changed:Connect(function() currentMapLabel:Set("Current: " .. tostring(currentMap.Value)) end)
+MainTab:CreateDropdown({
+	Name = "Roca (Fast Glitch)",
+	Options = (function()
+		local o = {"Ninguna"}
+		for _, r in ipairs(Rocks) do table.insert(o, r.label) end
+		return o
+	end)(),
+	CurrentOption = "Ninguna",
+	Callback = function(o)
+		selectedRock = nil
+		for _, r in ipairs(Rocks) do
+			if r.label == o then selectedRock = r.durability break end
+		end
+	end
+})
+
+local currentMapLabel = MainTab:CreateText({Name="Current: "..currentMap.Value})
+currentMap.Changed:Connect(function() currentMapLabel:Set("Current: "..currentMap.Value) end)
+
+-- ============ FAST REP ============
+local fastRepOn = false
+local savedRepTimes = {}
+local function applyRepTimeZero()
+	local mf = Workspace:FindFirstChild("machinesFolder")
+	if mf then
+		for _, v in pairs(mf:GetDescendants()) do
+			if v.Name == "repTime" and v:IsA("NumberValue") then
+				if savedRepTimes[v] == nil then savedRepTimes[v] = v.Value end
+				if v.Value ~= 0 then
+					pcall(function() v.Value = 0 end)
+				end
+			end
+		end
+	end
+	for _, loc in pairs({LocalPlayer:FindFirstChild("Backpack"), LocalPlayer.Character}) do
+		if loc then
+			for _, tool in pairs(loc:GetChildren()) do
+				if tool:IsA("Tool") then
+					local r = tool:FindFirstChild("repTime", true)
+					if r and r:IsA("NumberValue") then
+						if savedRepTimes[r] == nil then savedRepTimes[r] = r.Value end
+						if r.Value ~= 0 then pcall(function() r.Value = 0 end) end
+					end
+				end
+			end
+		end
+	end
+end
+local function restoreRepTimes()
+	for inst, orig in pairs(savedRepTimes) do
+		if inst and inst.Parent then pcall(function() inst.Value = orig end) end
+	end
+	table.clear(savedRepTimes)
+end
+FarmTab:CreateToggle({
+	Name = "Fast Rep",
+	CurrentValue = false,
+	Flag = "FastRepZero",
+	Callback = function(v)
+		fastRepOn = v
+		if v then
+			task.spawn(function()
+				local ticks = 0
+				while fastRepOn do
+					ticks += 1
+					if ticks % 30 == 1 then applyRepTimeZero() end
+					local c = LocalPlayer.Character
+					local h = c and c:FindFirstChildOfClass("Humanoid")
+					if h and h.Health > 0 then
+						local seat = getSeat(h)
+						if seat then
+							pcall(function() muscleEvent:FireServer("rep", seat) end)
+						else
+							pcall(function() muscleEvent:FireServer("rep") end)
+						end
+					end
+					RunService.Heartbeat:Wait()
+				end
+			end)
+		else
+			restoreRepTimes()
+		end
+		Window:Notify({Title="Princes Hud", Content=v and "Fast Rep ON" or "Fast Rep OFF", Duration=2})
+	end
+})
 
 -- ============ SUPER FAST REP ============
 local superRepOn = false
-local superRepBatch = 5
-
-FarmTab:AddSlider({
-	Name = "Velocidad de Repeticiones",
+local isMobileDevice = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+local superRepBatch = 10
+local superRepInterval = 0.02
+FarmTab:CreateSlider({
+	Name = "Super Rep Batch",
 	Range = {1, 10},
 	Increment = 1,
 	CurrentValue = superRepBatch,
+	Flag = "SuperRepBatch",
 	Callback = function(v)
-		superRepBatch = math.clamp(math.floor(tonumber(v) or 5), 1, 10)
+		v = math.floor((tonumber(v) or superRepBatch) + 0.5)
+		local cap = 10
+		superRepBatch = math.clamp(v, 1, cap)
 	end
 })
-
-FarmTab:AddToggle({
+FarmTab:CreateToggle({
 	Name = "Super Fast Rep",
 	CurrentValue = false,
+	Flag = "SuperFastRep",
 	Callback = function(v)
 		superRepOn = v
 		if v then
 			task.spawn(function()
 				while superRepOn do
+					applyRepTimeZero()
 					local c = LocalPlayer.Character
 					local h = c and c:FindFirstChildOfClass("Humanoid")
 					if h and h.Health > 0 then
 						local seat = getSeat(h)
+						local hasX2 = LocalPlayer:FindFirstChild("ownedGamepasses") and LocalPlayer.ownedGamepasses:FindFirstChild("x2 Rep Time")
+						local effective = superRepInterval
+						if hasX2 then effective = effective * 0.5 end
 						for i = 1, superRepBatch do
 							if seat then
 								pcall(function() muscleEvent:FireServer("rep", seat) end)
@@ -510,23 +552,26 @@ FarmTab:AddToggle({
 								pcall(function() muscleEvent:FireServer("rep") end)
 							end
 						end
-						task.wait(0.02)
+						task.wait(effective)
 					else
 						task.wait(0.2)
 					end
 				end
 			end)
+		else
+			restoreRepTimes()
 		end
-		Window:Notify({Title="Princes Hub", Content=v and "Super Fast Rep ON" or "Super Fast Rep OFF", Duration=2})
+		Window:Notify({Title="Princes Hud", Content=v and "Super Fast Rep ON" or "Super Fast Rep OFF", Duration=2})
 	end
 })
 
--- ============ AUTO RENA ============
-FarmTab:AddDivider("Sistemas Automáticos")
+-- ============ AUTO RENA (AGREGADO) ============
+FarmTab:CreateDivider("Auto Rena")
 local autoRenaOn = false
-FarmTab:AddToggle({
+FarmTab:CreateToggle({
 	Name = "Auto Rebirth (Rena)",
 	CurrentValue = false,
+	Flag = "AutoRenaNormal",
 	Callback = function(v)
 		autoRenaOn = v
 		if v then
@@ -535,12 +580,150 @@ FarmTab:AddToggle({
 					pcall(function()
 						rebirthRemote:InvokeServer("rebirthRequest")
 					end)
-					task.wait(3)
+					task.wait(2)
 				end
 			end)
 		end
-		Window:Notify({Title="Princes Hub", Content=v and "Auto Rena ON" or "Auto Rena OFF", Duration=2})
+		Window:Notify({Title="Princes Hud", Content=v and "Auto Rena ON" or "Auto Rena OFF", Duration=2})
 	end
 })
 
-Window:Notify({Title = "Princes Hub", Content = "¡Cargado con éxito!", Duration = 3})
+-- ============ MOTOR RAPIDO (rebirth + strength) ORIGINAL ============
+local LP = LocalPlayer
+local Env = getgenv and getgenv() or _G
+local StatsService = game:GetService("Stats")
+local UltimateAttributes = {}
+local State = {
+	running = true,
+	fastFarmMode = nil,
+	autoWeight = false,
+	hideFrames = false,
+	rebirth = {},
+	visualStatRecords = setmetatable({}, { __mode = "k" }),
+}
+State.setAutoEgg = function() return true end
+local threads = {}
+local threadGenerations = {}
+local function stopThread(key)
+	threadGenerations[key] = (threadGenerations[key] or 0) + 1
+	local t = threads[key]
+	if t then
+		pcall(task.cancel, t)
+		threads[key] = nil
+	end
+end
+local function startThread(key, callback)
+	stopThread(key)
+	local generation = threadGenerations[key]
+	local thread
+	thread = task.defer(function()
+		pcall(callback)
+		if threadGenerations[key] == generation and threads[key] == thread then
+			threads[key] = nil
+		end
+	end)
+	threads[key] = thread
+	return threads[key]
+end
+local function setHideFrames() end
+local FastFarm = {
+	RepToggles = {},
+	MachineToggles = {},
+	FullTrainToggles = {},
+	MachineVisuals = {
+		playIdle = function() end,
+		playRep = function() end,
+		stopAnimations = function() end,
+	},
+}
+FastFarm.UpdateStrengthFramesControl = function() end
+local protectBossRareOn = true
+local knownBossRareIds = {}
+local function isBossRara(pet)
+	if not protectBossRareOn then return false end
+	if not pet then return false end
+	local okId, pid = pcall(function() return pet:GetAttribute("ProfileId") end)
+	if okId and type(pid) == "string" and knownBossRareIds[pid] then return true end
+	local ok, mark = pcall(function() return pet:GetAttribute("BossRewardDisplayName") end)
+	if ok and mark ~= nil then
+		if okId and type(pid) == "string" then knownBossRareIds[pid] = true end
+		return true
+	end
+	if tostring(pet.Name or "") == "Rare Boss Pet" then
+		if okId and type(pid) == "string" then knownBossRareIds[pid] = true end
+		return true
+	end
+	return false
+end
+local function isProtegida(pet)
+	return isBossRara(pet)
+end
+function FastFarm:ProtectedEquippedCount()
+	local n = 0
+	local eq = LP:FindFirstChild("equippedPets")
+	if eq then
+		for _, slot in ipairs(eq:GetChildren()) do
+			local ref = slot:FindFirstChild("petReference")
+			local pet = (ref and ref:IsA("ObjectValue") and ref.Value) or (slot:IsA("ObjectValue") and slot.Value) or nil
+			if pet and pet:IsA("StringValue") and isProtegida(pet) then
+				n = n + 1
+			end
+		end
+	end
+	return n
+end
+function FastFarm:FreePetSlots()
+	return math.max(0, (self.GetPetSlotCapacity and self:GetPetSlotCapacity() or 0) - self:ProtectedEquippedCount())
+end
+
+local CONFIG = {
+FastFarm = {
+		Packs = {
+			chaos = {
+				label = "Señores del Caos",
+				strength = { "Swift Samurai" },
+				rebirth = "Tribal Overlord",
+			},
+			ultra = {
+				label = "Ultra Titanes",
+				strength = { "Powercore Hound", "Omega Overlord" },
+				rebirth = "Titanium Hydra",
+			},
+		},
+		StrengthMachine = "Industrial Bench",
+		RebirthMachine = "Industrial Bar Lift",
+		MaxPets = 9,
+		RepsPerCycle = 48,
+		RepDelay = 0.008,
+		PingSoft = 180,
+		PingMedium = 300,
+		PingHigh = 600,
+		PingCritical = 700,
+		PingPause = 880,
+		PingResume = 450,
+		PingReducerPause = 860,
+		PingReducerResume = 480,
+		PingSampleInterval = 0.12,
+		StrengthPingSoft = 400,
+		StrengthPingMedium = 560,
+		StrengthPingHigh = 720,
+		StrengthPingCritical = 840,
+		StrengthMinBatch = 26,
+		StrengthStartBatch = 42,
+		StrengthMaxBatch = 42,
+		StrengthBackoffPing = 700,
+		StrengthBackoffInterval = 0.35,
+		StrengthRampPing = 450,
+		StrengthRampInterval = 0.9,
+		StrengthDelay = 0.05,
+		SizeInvokeInterval = 0.75,
+		SizeReleaseDuration = 5,
+		FramesReleaseDuration = 10,
+		RebirthCooldown = 6.0,
+		RebirthSafetyMargin = 0.03,
+		RebirthRepBatch = 6,
+		RebirthPingRise = 100,
+		RebirthPingPause = 800,
+		RebirthStrengthBufferRatio = 0.1,
+	}
+}
