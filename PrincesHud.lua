@@ -197,7 +197,7 @@ function Rayfield:CreateWindow(_config)
 				Set = function(_, t)
 					label.Text = tostring(t)
 					pcall(function()
-						label.Size = UDim2.new(1, -10, 0, 20)
+						label.Size = UDim2.new(1, -10, 0, 40)
 					end)
 				end,
 			}
@@ -588,7 +588,7 @@ FarmTab:CreateToggle({
 	end
 })
 
--- ============ CALCULADORA DE RENAS Y FUERZA (NUEVO) ============
+-- ============ CALCULADORA DE RENAS Y FUERZA (CON SIGNOS) ============
 FarmTab:CreateDivider("Calculador de Progreso")
 
 local targetRebirths = 1000
@@ -604,6 +604,24 @@ FarmTab:CreateSlider({
 })
 
 local statsTextLabel = FarmTab:CreateText({Name = "Calculando estadísticas..."})
+
+local function formatNumber(n)
+	if not n or type(n) ~= "number" then return "0" end
+	if n < 1000 then
+		return tostring(math.floor(n))
+	end
+	local suffixes = {"", "k", "m", "b", "t", "qd", "qn", "sx", "sp", "oc", "no", "dc"}
+	local i = 1
+	while n >= 1000 and i < #suffixes do
+		n = n / 1000
+		i = i + 1
+	end
+	local formatted = string.format("%.1f", n)
+	if formatted:sub(-2) == ".0" then
+		formatted = formatted:sub(1, -3)
+	end
+	return formatted .. suffixes[i]
+end
 
 task.spawn(function()
 	while true do
@@ -660,16 +678,16 @@ task.spawn(function()
 		end
 
 		local displayStr = string.format(
-			"• Renas -> Día: %s | Sem: %s\n" ..
 			"• Fuerza -> Hr: %s | Día: %s | Sem: %s | Mes: %s\n" ..
-			"• Tiempo para objetivo (%d): %s",
-			tostring(math.floor(renasDay)),
-			tostring(math.floor(renasWeek)),
-			tostring(math.floor(strengthHour)),
-			tostring(math.floor(strengthDay)),
-			tostring(math.floor(strengthWeek)),
-			tostring(math.floor(strengthMonth)),
-			targetRebirths,
+			"• Renas -> Día: %s | Sem: %s\n" ..
+			"• Tiempo objetivo (%s): %s",
+			formatNumber(strengthHour),
+			formatNumber(strengthDay),
+			formatNumber(strengthWeek),
+			formatNumber(strengthMonth),
+			formatNumber(renasDay),
+			formatNumber(renasWeek),
+			formatNumber(targetRebirths),
 			timeToTarget
 		)
 
