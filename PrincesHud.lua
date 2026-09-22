@@ -565,7 +565,7 @@ FarmTab:CreateToggle({
 	end
 })
 
--- ============ AUTO RENA (AGREGADO) ============
+-- ============ AUTO RENA ============
 FarmTab:CreateDivider("Auto Rena")
 local autoRenaOn = false
 FarmTab:CreateToggle({
@@ -587,6 +587,97 @@ FarmTab:CreateToggle({
 		Window:Notify({Title="Princes Hud", Content=v and "Auto Rena ON" or "Auto Rena OFF", Duration=2})
 	end
 })
+
+-- ============ CALCULADORA DE RENAS Y FUERZA (NUEVO) ============
+FarmTab:CreateDivider("Calculador de Progreso")
+
+local targetRebirths = 1000
+FarmTab:CreateSlider({
+	Name = "Objetivo de Renas",
+	Range = {1, 10000},
+	Increment = 10,
+	CurrentValue = 1000,
+	Flag = "TargetRebirths",
+	Callback = function(v)
+		targetRebirths = tonumber(v) or 1000
+	end
+})
+
+local statsTextLabel = FarmTab:CreateText({Name = "Calculando estadísticas..."})
+
+task.spawn(function()
+	while true do
+		task.wait(1)
+		local stats = LocalPlayer:FindFirstChild("leaderstats")
+		local rStat = stats and stats:FindFirstChild("Rebirths")
+		local sStat = stats and (stats:FindFirstChild("Strength") or stats:FindFirstChild("Durability"))
+
+		local startR = rStat and rStat.Value or 0
+		local startS = sStat and sStat.Value or 0
+		local t1 = tick()
+
+		task.wait(2) -- Mide durante 2 segundos para calcular tasa exacta
+
+		stats = LocalPlayer:FindFirstChild("leaderstats")
+		rStat = stats and stats:FindFirstChild("Rebirths")
+		sStat = stats and (stats:FindFirstChild("Strength") or stats:FindFirstChild("Durability"))
+
+		local endR = rStat and rStat.Value or startR
+		local endS = sStat and sStat.Value or startS
+		local t2 = tick()
+
+		local dt = t2 - t1
+		if dt <= 0 then dt = 1 end
+
+		local rPerSec = (endR - startR) / dt
+		local sPerSec = (endS - startS) / dt
+
+		-- Renas por Día y Semana
+		local renasDay = rPerSec * 86400
+		local renasWeek = rPerSec * 604800
+
+		-- Fuerza por Hora, Día, Semana y Mes
+		local strengthHour = sPerSec * 3600
+		local strengthDay = sPerSec * 86400
+		local strengthWeek = sPerSec * 604800
+		local strengthMonth = sPerSec * 2592000
+
+		-- Cálculo de tiempo hasta objetivo de Renas
+		local timeToTarget = "Sin progreso detectado"
+		if rPerSec > 0 and endR < targetRebirths then
+			local secs = (targetRebirths - endR) / rPerSec
+			if secs < 60 then
+				timeToTarget = math.floor(secs) .. " seg"
+			elseif secs < 3600 then
+				timeToTarget = string.format("%.1f min", secs / 60)
+			elseif secs < 86400 then
+				timeToTarget = string.format("%.1f hrs", secs / 3600)
+			else
+				timeToTarget = string.format("%.1f días", secs / 86400)
+			end
+		elseif endR >= targetRebirths then
+			timeToTarget = "¡Objetivo alcanzado!"
+		end
+
+		local displayStr = string.format(
+			"• Renas -> Día: %s | Sem: %s\n" ..
+			"• Fuerza -> Hr: %s | Día: %s | Sem: %s | Mes: %s\n" ..
+			"• Tiempo para objetivo (%d): %s",
+			tostring(math.floor(renasDay)),
+			tostring(math.floor(renasWeek)),
+			tostring(math.floor(strengthHour)),
+			tostring(math.floor(strengthDay)),
+			tostring(math.floor(strengthWeek)),
+			tostring(math.floor(strengthMonth)),
+			targetRebirths,
+			timeToTarget
+		)
+
+		pcall(function()
+			statsTextLabel:Set(displayStr)
+		end)
+	end
+end)
 
 -- ============ MOTOR RAPIDO (rebirth + strength) ORIGINAL ============
 local LP = LocalPlayer
