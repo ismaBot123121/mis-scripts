@@ -81,6 +81,46 @@ local _eleriumWindow = library:AddWindow("Princes Hud", {
 	min_size = _isMobileUI and Vector2.new(360, 560) or Vector2.new(500, 620),
 	can_resize = not _isMobileUI,
 })
+
+-- ============ BOTÓN FLOTANTE PARA RETRAER / MINIMIZAR EL HUD ============
+local toggleGui = Instance.new("ScreenGui")
+toggleGui.Name = "PrincesHudToggle"
+toggleGui.ResetOnSpawn = false
+pcall(function() toggleGui.Parent = CoreGui end)
+if not toggleGui.Parent then toggleGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+
+local floatBtn = Instance.new("TextButton")
+floatBtn.Size = UDim2.new(0, 110, 0, 40)
+floatBtn.Position = UDim2.new(0, 15, 0.3, 0)
+floatBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+floatBtn.BorderColor3 = Color3.fromRGB(255, 215, 0)
+floatBtn.BorderSizePixel = 2
+floatBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
+floatBtn.Text = "👑 Ocultar"
+floatBtn.Font = Enum.Font.SourceSansBold
+floatBtn.TextSize = 14
+floatBtn.Active = true
+floatBtn.Draggable = true
+floatBtn.Parent = toggleGui
+
+local hubOpen = true
+floatBtn.MouseButton1Click:Connect(function()
+	hubOpen = not hubOpen
+	floatBtn.Text = hubOpen and "👑 Ocultar" or "👑 Mostrar"
+	
+	-- Ocultar o mostrar las ventanas del Hub dinámicamente
+	for _, gui in ipairs(CoreGui:GetChildren()) do
+		if gui:IsA("ScreenGui") and gui ~= toggleGui and (gui.Name:lower():find("elerium") or gui.Name:lower():find("mome") or gui.Name:lower():find("hub")) then
+			gui.Enabled = hubOpen
+		end
+	end
+	for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
+		if gui:IsA("ScreenGui") and gui ~= toggleGui and (gui.Name:lower():find("elerium") or gui.Name:lower():find("mome") or gui.Name:lower():find("hub")) then
+			gui.Enabled = hubOpen
+		end
+	end
+end)
+
 local Rayfield = {}
 function Rayfield:CreateWindow(_config)
 	local Window = {}
@@ -183,6 +223,22 @@ function Rayfield:CreateWindow(_config)
 				pcall(opt2.Callback)
 			end)
 		end
+		function T:CreateTextBox(opt2)
+			local tb = nil
+			pcall(function()
+				tb = tab:AddTextBox(opt2.Name, function(txt)
+					pcall(opt2.Callback, txt)
+				end)
+			end)
+			if not tb then
+				pcall(function()
+					tb = tab:AddInput(opt2.Name, function(txt)
+						pcall(opt2.Callback, txt)
+					end)
+				end)
+			end
+			return tb or { Set = function() end }
+		end
 		function T:CreateText(opt2)
 			local label = tab:AddLabel(opt2.Name or "")
 			if opt2.Description then
@@ -191,7 +247,7 @@ function Rayfield:CreateWindow(_config)
 			pcall(function()
 				label.TextTruncate = Enum.TextTruncate.None
 				label.TextXAlignment = Enum.TextXAlignment.Left
-				label.Size = UDim2.new(1, -10, 0, 130) -- Altura expandida para que todo vaya hacia abajo sin taparse
+				label.Size = UDim2.new(1, -10, 0, 130)
 			end)
 			return {
 				Set = function(_, t)
@@ -511,13 +567,13 @@ FarmTab:CreateToggle({
 	end
 })
 
--- ============ SUPER FAST REP ============
+-- ============ SUPER FAST REP (CON BARRA Y BOTONES DE VELOCIDAD FÁCILES) ============
 local superRepOn = false
 local isMobileDevice = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 local superRepBatch = 10
 local superRepInterval = 0.02
 FarmTab:CreateSlider({
-	Name = "Super Rep Batch",
+	Name = "Super Rep Batch (Velocidad)",
 	Range = {1, 10},
 	Increment = 1,
 	CurrentValue = superRepBatch,
@@ -528,6 +584,29 @@ FarmTab:CreateSlider({
 		superRepBatch = math.clamp(v, 1, cap)
 	end
 })
+
+FarmTab:CreateButton({
+	Name = "⚡ Velocidad Baja (Batch 3)",
+	Callback = function()
+		superRepBatch = 3
+		Window:Notify({Title="Princes Hud", Content="Velocidad ajustada a 3", Duration=1})
+	end
+})
+FarmTab:CreateButton({
+	Name = "⚡ Velocidad Media (Batch 6)",
+	Callback = function()
+		superRepBatch = 6
+		Window:Notify({Title="Princes Hud", Content="Velocidad ajustada a 6", Duration=1})
+	end
+})
+FarmTab:CreateButton({
+	Name = "🚀 Velocidad Máxima (Batch 10)",
+	Callback = function()
+		superRepBatch = 10
+		Window:Notify({Title="Princes Hud", Content="Velocidad ajustada a 10 (Máx)", Duration=1})
+	end
+})
+
 FarmTab:CreateToggle({
 	Name = "Super Fast Rep",
 	CurrentValue = false,
@@ -588,18 +667,37 @@ FarmTab:CreateToggle({
 	end
 })
 
--- ============ CALCULADORA DE RENAS Y FUERZA (EN VERTICAL HACIA ABAJO) ============
+-- ============ CALCULADORA DE RENAS Y FUERZA (OBJETIVO ESCRITO + BOTONES) ============
 FarmTab:CreateDivider("Calculador de Progreso")
 
 local targetRebirths = 1000
-FarmTab:CreateSlider({
-	Name = "Objetivo de Renas",
-	Range = {1, 10000},
-	Increment = 10,
-	CurrentValue = 1000,
-	Flag = "TargetRebirths",
-	Callback = function(v)
-		targetRebirths = tonumber(v) or 1000
+
+pcall(function()
+	FarmTab:CreateTextBox({
+		Name = "Escribe tu Objetivo de Renas",
+		CurrentValue = tostring(targetRebirths),
+		Callback = function(val)
+			local num = tonumber(val)
+			if num and num > 0 then
+				targetRebirths = num
+				Window:Notify({Title="Princes Hud", Content="Nuevo objetivo: " .. tostring(num), Duration=1.5})
+			end
+		end
+	})
+end)
+
+FarmTab:CreateButton({
+	Name = "🎯 Meta rápida: 1,000 Renas",
+	Callback = function()
+		targetRebirths = 1000
+		Window:Notify({Title="Princes Hud", Content="Meta establecida en 1,000", Duration=1})
+	end
+})
+FarmTab:CreateButton({
+	Name = "🎯 Meta rápida: 10,000 Renas",
+	Callback = function()
+		targetRebirths = 10000
+		Window:Notify({Title="Princes Hud", Content="Meta establecida en 10,000", Duration=1})
 	end
 })
 
@@ -674,7 +772,6 @@ task.spawn(function()
 			timeToTarget = "¡Objetivo alcanzado!"
 		end
 
-		-- ESTRICTAMENTE VERTICAL (HACIA ABAJO) PARA QUE NO SE TAPE NADA
 		local displayStr = string.format(
 			"• Fuerza x Hora: %s\n" ..
 			"• Fuerza x Día: %s\n" ..
