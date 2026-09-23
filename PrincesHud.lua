@@ -1,5 +1,5 @@
 -- ============ SISTEMA DE KEY (PRINCES HUD) ============
-local correctKey = "humildes"
+local correctKey = "humildeONhud"
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -82,7 +82,7 @@ local _eleriumWindow = library:AddWindow("Princes Hud", {
 	can_resize = not _isMobileUI,
 })
 
--- ============ BOTÓN FLOTANTE PARA RETRAER / MINIMIZAR EL HUD ============
+-- ============ BOTÓN FLOTANTE PARA RETRAER / OCULTAR EL HUD (CORREGIDO) ============
 local toggleGui = Instance.new("ScreenGui")
 toggleGui.Name = "PrincesHudToggle"
 toggleGui.ResetOnSpawn = false
@@ -108,17 +108,19 @@ floatBtn.MouseButton1Click:Connect(function()
 	hubOpen = not hubOpen
 	floatBtn.Text = hubOpen and "👑 Ocultar" or "👑 Mostrar"
 	
-	-- Ocultar o mostrar las ventanas del Hub dinámicamente
-	for _, gui in ipairs(CoreGui:GetChildren()) do
-		if gui:IsA("ScreenGui") and gui ~= toggleGui and (gui.Name:lower():find("elerium") or gui.Name:lower():find("mome") or gui.Name:lower():find("hub")) then
-			gui.Enabled = hubOpen
+	pcall(function()
+		if _eleriumWindow then
+			-- Oculta la ventana principal directamente
+			if _eleriumWindow:IsA("GuiObject") then
+				_eleriumWindow.Visible = hubOpen
+			end
+			-- Oculta el contenedor padre ScreenGui por completo si existe
+			local screenGui = _eleriumWindow:FindFirstAncestorWhichIsA("ScreenGui")
+			if screenGui then
+				screenGui.Enabled = hubOpen
+			end
 		end
-	end
-	for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
-		if gui:IsA("ScreenGui") and gui ~= toggleGui and (gui.Name:lower():find("elerium") or gui.Name:lower():find("mome") or gui.Name:lower():find("hub")) then
-			gui.Enabled = hubOpen
-		end
-	end
+	end)
 end)
 
 local Rayfield = {}
@@ -567,7 +569,7 @@ FarmTab:CreateToggle({
 	end
 })
 
--- ============ SUPER FAST REP (CON BARRA Y BOTONES DE VELOCIDAD FÁCILES) ============
+-- ============ SUPER FAST REP ============
 local superRepOn = false
 local isMobileDevice = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 local superRepBatch = 10
@@ -667,7 +669,7 @@ FarmTab:CreateToggle({
 	end
 })
 
--- ============ CALCULADORA DE RENAS Y FUERZA (OBJETIVO ESCRITO + BOTONES) ============
+-- ============ CALCULADORA DE RENAS Y FUERZA ============
 FarmTab:CreateDivider("Calculador de Progreso")
 
 local targetRebirths = 1000
