@@ -1,5 +1,5 @@
 -- ============ SISTEMA DE KEY (PRINCES HUD) ============
-local correctKey = "humildeONhud"
+local correctKey = "1"
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
