@@ -82,7 +82,7 @@ local _eleriumWindow = library:AddWindow("Princes Hud", {
 	can_resize = not _isMobileUI,
 })
 
--- ============ BOTÓN FLOTANTE PARA RETRAER / OCULTAR EL HUD (CORREGIDO) ============
+-- ============ BOTÓN FLOTANTE PARA OCULTAR/MOSTRAR EL HUB (100% FUNCIONAL) ============
 local toggleGui = Instance.new("ScreenGui")
 toggleGui.Name = "PrincesHudToggle"
 toggleGui.ResetOnSpawn = false
@@ -103,21 +103,46 @@ floatBtn.Active = true
 floatBtn.Draggable = true
 floatBtn.Parent = toggleGui
 
+-- Detectar automáticamente el ScreenGui del Hub creado por la librería
+local hubScreenGui = nil
+task.spawn(function()
+	task.wait(0.6)
+	for _, gui in ipairs(CoreGui:GetChildren()) do
+		if gui:IsA("ScreenGui") and gui.Name ~= "PrincesHudToggle" and gui.Name ~= "PrincesHudKeySystem" then
+			hubScreenGui = gui
+			break
+		end
+	end
+	if not hubScreenGui then
+		for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
+			if gui:IsA("ScreenGui") and gui.Name ~= "PrincesHudToggle" and gui.Name ~= "PrincesHudKeySystem" then
+				hubScreenGui = gui
+				break
+			end
+		end
+	end
+end)
+
 local hubOpen = true
 floatBtn.MouseButton1Click:Connect(function()
 	hubOpen = not hubOpen
 	floatBtn.Text = hubOpen and "👑 Ocultar" or "👑 Mostrar"
 	
 	pcall(function()
-		if _eleriumWindow then
-			-- Oculta la ventana principal directamente
-			if _eleriumWindow:IsA("GuiObject") then
-				_eleriumWindow.Visible = hubOpen
+		if hubScreenGui then
+			hubScreenGui.Enabled = hubOpen
+		else
+			for _, gui in ipairs(CoreGui:GetChildren()) do
+				if gui:IsA("ScreenGui") and gui.Name ~= "PrincesHudToggle" and gui.Name ~= "PrincesHudKeySystem" then
+					gui.Enabled = hubOpen
+					hubScreenGui = gui
+				end
 			end
-			-- Oculta el contenedor padre ScreenGui por completo si existe
-			local screenGui = _eleriumWindow:FindFirstAncestorWhichIsA("ScreenGui")
-			if screenGui then
-				screenGui.Enabled = hubOpen
+			for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
+				if gui:IsA("ScreenGui") and gui.Name ~= "PrincesHudToggle" and gui.Name ~= "PrincesHudKeySystem" then
+					gui.Enabled = hubOpen
+					hubScreenGui = gui
+				end
 			end
 		end
 	end)
@@ -795,143 +820,3 @@ task.spawn(function()
 		end)
 	end
 end)
-
--- ============ MOTOR RAPIDO (rebirth + strength) ORIGINAL ============
-local LP = LocalPlayer
-local Env = getgenv and getgenv() or _G
-local StatsService = game:GetService("Stats")
-local UltimateAttributes = {}
-local State = {
-	running = true,
-	fastFarmMode = nil,
-	autoWeight = false,
-	hideFrames = false,
-	rebirth = {},
-	visualStatRecords = setmetatable({}, { __mode = "k" }),
-}
-State.setAutoEgg = function() return true end
-local threads = {}
-local threadGenerations = {}
-local function stopThread(key)
-	threadGenerations[key] = (threadGenerations[key] or 0) + 1
-	local t = threads[key]
-	if t then
-		pcall(task.cancel, t)
-		threads[key] = nil
-	end
-end
-local function startThread(key, callback)
-	stopThread(key)
-	local generation = threadGenerations[key]
-	local thread
-	thread = task.defer(function()
-		pcall(callback)
-		if threadGenerations[key] == generation and threads[key] == thread then
-			threads[key] = nil
-		end
-	end)
-	threads[key] = thread
-	return threads[key]
-end
-local function setHideFrames() end
-local FastFarm = {
-	RepToggles = {},
-	MachineToggles = {},
-	FullTrainToggles = {},
-	MachineVisuals = {
-		playIdle = function() end,
-		playRep = function() end,
-		stopAnimations = function() end,
-	},
-}
-FastFarm.UpdateStrengthFramesControl = function() end
-local protectBossRareOn = true
-local knownBossRareIds = {}
-local function isBossRara(pet)
-	if not protectBossRareOn then return false end
-	if not pet then return false end
-	local okId, pid = pcall(function() return pet:GetAttribute("ProfileId") end)
-	if okId and type(pid) == "string" and knownBossRareIds[pid] then return true end
-	local ok, mark = pcall(function() return pet:GetAttribute("BossRewardDisplayName") end)
-	if ok and mark ~= nil then
-		if okId and type(pid) == "string" then knownBossRareIds[pid] = true end
-		return true
-	end
-	if tostring(pet.Name or "") == "Rare Boss Pet" then
-		if okId and type(pid) == "string" then knownBossRareIds[pid] = true end
-		return true
-	end
-	return false
-end
-local function isProtegida(pet)
-	return isBossRara(pet)
-end
-function FastFarm:ProtectedEquippedCount()
-	local n = 0
-	local eq = LP:FindFirstChild("equippedPets")
-	if eq then
-		for _, slot in ipairs(eq:GetChildren()) do
-			local ref = slot:FindFirstChild("petReference")
-			local pet = (ref and ref:IsA("ObjectValue") and ref.Value) or (slot:IsA("ObjectValue") and slot.Value) or nil
-			if pet and pet:IsA("StringValue") and isProtegida(pet) then
-				n = n + 1
-			end
-		end
-	end
-	return n
-end
-function FastFarm:FreePetSlots()
-	return math.max(0, (self.GetPetSlotCapacity and self:GetPetSlotCapacity() or 0) - self:ProtectedEquippedCount())
-end
-
-local CONFIG = {
-FastFarm = {
-		Packs = {
-			chaos = {
-				label = "Señores del Caos",
-				strength = { "Swift Samurai" },
-				rebirth = "Tribal Overlord",
-			},
-			ultra = {
-				label = "Ultra Titanes",
-				strength = { "Powercore Hound", "Omega Overlord" },
-				rebirth = "Titanium Hydra",
-			},
-		},
-		StrengthMachine = "Industrial Bench",
-		RebirthMachine = "Industrial Bar Lift",
-		MaxPets = 9,
-		RepsPerCycle = 48,
-		RepDelay = 0.008,
-		PingSoft = 180,
-		PingMedium = 300,
-		PingHigh = 600,
-		PingCritical = 700,
-		PingPause = 880,
-		PingResume = 450,
-		PingReducerPause = 860,
-		PingReducerResume = 480,
-		PingSampleInterval = 0.12,
-		StrengthPingSoft = 400,
-		StrengthPingMedium = 560,
-		StrengthPingHigh = 720,
-		StrengthPingCritical = 840,
-		StrengthMinBatch = 26,
-		StrengthStartBatch = 42,
-		StrengthMaxBatch = 42,
-		StrengthBackoffPing = 700,
-		StrengthBackoffInterval = 0.35,
-		StrengthRampPing = 450,
-		StrengthRampInterval = 0.9,
-		StrengthDelay = 0.05,
-		SizeInvokeInterval = 0.75,
-		SizeReleaseDuration = 5,
-		FramesReleaseDuration = 10,
-		RebirthCooldown = 6.0,
-		RebirthSafetyMargin = 0.03,
-		RebirthRepBatch = 6,
-		RebirthPingRise = 100,
-		RebirthPingPause = 800,
-		RebirthStrengthBufferRatio = 0.1,
-	}
-}
