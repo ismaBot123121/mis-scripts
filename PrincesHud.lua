@@ -75,7 +75,6 @@ local library = loadstring(game:HttpGet(GUI_LIB_URL, true))()
 local _UIS_MOBILE = game:GetService("UserInputService")
 local _isMobileUI = _UIS_MOBILE.TouchEnabled and not _UIS_MOBILE.KeyboardEnabled
 
--- Modificado a nombre Princes Hud y colores dorados/negros
 local _eleriumWindow = library:AddWindow("Princes Hud", {
 	main_color = Color3.fromRGB(255, 215, 0),
 	bg_color = Color3.fromRGB(15, 15, 15),
@@ -190,14 +189,15 @@ function Rayfield:CreateWindow(_config)
 				label.Text = tostring(opt2.Name or "") .. "\n" .. tostring(opt2.Description)
 			end
 			pcall(function()
-				label.TextTruncate = Enum.TextTruncate.AtEnd
+				label.TextTruncate = Enum.TextTruncate.None
 				label.TextXAlignment = Enum.TextXAlignment.Left
+				label.Size = UDim2.new(1, -10, 0, 130) -- Altura expandida para que todo vaya hacia abajo sin taparse
 			end)
 			return {
 				Set = function(_, t)
 					label.Text = tostring(t)
 					pcall(function()
-						label.Size = UDim2.new(1, -10, 0, 40)
+						label.Size = UDim2.new(1, -10, 0, 130)
 					end)
 				end,
 			}
@@ -588,7 +588,7 @@ FarmTab:CreateToggle({
 	end
 })
 
--- ============ CALCULADORA DE RENAS Y FUERZA (CON SIGNOS) ============
+-- ============ CALCULADORA DE RENAS Y FUERZA (EN VERTICAL HACIA ABAJO) ============
 FarmTab:CreateDivider("Calculador de Progreso")
 
 local targetRebirths = 1000
@@ -634,7 +634,7 @@ task.spawn(function()
 		local startS = sStat and sStat.Value or 0
 		local t1 = tick()
 
-		task.wait(2) -- Mide durante 2 segundos para calcular tasa exacta
+		task.wait(2)
 
 		stats = LocalPlayer:FindFirstChild("leaderstats")
 		rStat = stats and stats:FindFirstChild("Rebirths")
@@ -650,18 +650,15 @@ task.spawn(function()
 		local rPerSec = (endR - startR) / dt
 		local sPerSec = (endS - startS) / dt
 
-		-- Renas por Día y Semana
 		local renasDay = rPerSec * 86400
 		local renasWeek = rPerSec * 604800
 
-		-- Fuerza por Hora, Día, Semana y Mes
 		local strengthHour = sPerSec * 3600
 		local strengthDay = sPerSec * 86400
 		local strengthWeek = sPerSec * 604800
 		local strengthMonth = sPerSec * 2592000
 
-		-- Cálculo de tiempo hasta objetivo de Renas
-		local timeToTarget = "Sin progreso detectado"
+		local timeToTarget = "Sin progreso"
 		if rPerSec > 0 and endR < targetRebirths then
 			local secs = (targetRebirths - endR) / rPerSec
 			if secs < 60 then
@@ -677,14 +674,17 @@ task.spawn(function()
 			timeToTarget = "¡Objetivo alcanzado!"
 		end
 
+		-- ESTRICTAMENTE VERTICAL (HACIA ABAJO) PARA QUE NO SE TAPE NADA
 		local displayStr = string.format(
-			"• Fuerza -> Hr: %s | Día: %s | Sem: %s | Mes: %s\n" ..
-			"• Renas -> Día: %s | Sem: %s\n" ..
-			"• Tiempo objetivo (%s): %s",
+			"• Fuerza x Hora: %s\n" ..
+			"• Fuerza x Día: %s\n" ..
+			"• Fuerza x Semana: %s\n" ..
+			"• Renas x Día: %s\n" ..
+			"• Renas x Semana: %s\n" ..
+			"• Meta (%s): %s",
 			formatNumber(strengthHour),
 			formatNumber(strengthDay),
 			formatNumber(strengthWeek),
-			formatNumber(strengthMonth),
 			formatNumber(renasDay),
 			formatNumber(renasWeek),
 			formatNumber(targetRebirths),
