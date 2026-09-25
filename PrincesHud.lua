@@ -1,5 +1,5 @@
 -- ============ SISTEMA DE KEY (PRINCES HUD) ============
-local correctKey = "humildeONhud"
+local correctKey = "1234"
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -82,7 +82,7 @@ local _eleriumWindow = library:AddWindow("Princes Hud", {
 	can_resize = not _isMobileUI,
 })
 
--- ============ BOTÓN FLOTANTE PARA OCULTAR/MOSTRAR SOLO EL HUB (100% SEGURO) ============
+-- ============ BOTÓN FLOTANTE PARA OCULTAR/MOSTRAR EL HUB (CORREGIDO) ============
 local toggleGui = Instance.new("ScreenGui")
 toggleGui.Name = "PrincesHudToggle"
 toggleGui.ResetOnSpawn = false
@@ -103,45 +103,28 @@ floatBtn.Active = true
 floatBtn.Draggable = true
 floatBtn.Parent = toggleGui
 
--- Detectar y cachear exclusivamente la GUI del Hub de Elerium
-local eleriumGui = nil
-task.spawn(function()
-	task.wait(1.5) -- Esperar a que cargue la interfaz de la librería
-	for _, gui in ipairs(CoreGui:GetChildren()) do
-		if gui:IsA("ScreenGui") and gui.Name ~= "PrincesHudToggle" and gui.Name ~= "PrincesHudKeySystem" then
-			for _, desc in ipairs(gui:GetDescendants()) do
-				if desc:IsA("TextLabel") and desc.Text:find("Princes Hud") then
-					eleriumGui = gui
-					break
-				end
-			end
-		end
-	end
-	if not eleriumGui then
-		for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
-			if gui:IsA("ScreenGui") and gui.Name ~= "PrincesHudToggle" and gui.Name ~= "PrincesHudKeySystem" then
-				for _, desc in ipairs(gui:GetDescendants()) do
-					if desc:IsA("TextLabel") and desc.Text:find("Princes Hud") then
-						eleriumGui = gui
-						break
-					end
-				end
-			end
-		end
-	end
-end)
-
 local hubOpen = true
 floatBtn.MouseButton1Click:Connect(function()
 	hubOpen = not hubOpen
 	floatBtn.Text = hubOpen and "👑 Ocultar" or "👑 Mostrar"
 	
 	pcall(function()
-		if eleriumGui then
-			eleriumGui.Enabled = hubOpen
-			for _, desc in ipairs(eleriumGui:GetDescendants()) do
-				if desc:IsA("Frame") or desc:IsA("ScrollingFrame") then
-					desc.Visible = hubOpen
+		-- Buscar y alternar la visibilidad de los elementos del Hub de Elerium
+		for _, gui in ipairs(CoreGui:GetChildren()) do
+			if gui:IsA("ScreenGui") and gui.Name ~= "PrincesHudToggle" and gui.Name ~= "PrincesHudKeySystem" then
+				for _, child in ipairs(gui:GetChildren()) do
+					if child:IsA("Frame") then
+						child.Visible = hubOpen
+					end
+				end
+			end
+		end
+		for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
+			if gui:IsA("ScreenGui") and gui.Name ~= "PrincesHudToggle" and gui.Name ~= "PrincesHudKeySystem" then
+				for _, child in ipairs(gui:GetChildren()) do
+					if child:IsA("Frame") then
+						child.Visible = hubOpen
+					end
 				end
 			end
 		end
