@@ -82,55 +82,6 @@ local _eleriumWindow = library:AddWindow("Princes Hud", {
 	can_resize = not _isMobileUI,
 })
 
--- ============ BOTÓN FLOTANTE PARA OCULTAR/MOSTRAR EL HUB (CORREGIDO) ============
-local toggleGui = Instance.new("ScreenGui")
-toggleGui.Name = "PrincesHudToggle"
-toggleGui.ResetOnSpawn = false
-pcall(function() toggleGui.Parent = CoreGui end)
-if not toggleGui.Parent then toggleGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
-
-local floatBtn = Instance.new("TextButton")
-floatBtn.Size = UDim2.new(0, 110, 0, 40)
-floatBtn.Position = UDim2.new(0, 15, 0.3, 0)
-floatBtn.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
-floatBtn.BorderColor3 = Color3.fromRGB(255, 215, 0)
-floatBtn.BorderSizePixel = 2
-floatBtn.TextColor3 = Color3.fromRGB(255, 215, 0)
-floatBtn.Text = "👑 Ocultar"
-floatBtn.Font = Enum.Font.SourceSansBold
-floatBtn.TextSize = 14
-floatBtn.Active = true
-floatBtn.Draggable = true
-floatBtn.Parent = toggleGui
-
-local hubOpen = true
-floatBtn.MouseButton1Click:Connect(function()
-	hubOpen = not hubOpen
-	floatBtn.Text = hubOpen and "👑 Ocultar" or "👑 Mostrar"
-	
-	pcall(function()
-		-- Buscar y alternar la visibilidad de los elementos del Hub de Elerium
-		for _, gui in ipairs(CoreGui:GetChildren()) do
-			if gui:IsA("ScreenGui") and gui.Name ~= "PrincesHudToggle" and gui.Name ~= "PrincesHudKeySystem" then
-				for _, child in ipairs(gui:GetChildren()) do
-					if child:IsA("Frame") then
-						child.Visible = hubOpen
-					end
-				end
-			end
-		end
-		for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
-			if gui:IsA("ScreenGui") and gui.Name ~= "PrincesHudToggle" and gui.Name ~= "PrincesHudKeySystem" then
-				for _, child in ipairs(gui:GetChildren()) do
-					if child:IsA("Frame") then
-						child.Visible = hubOpen
-					end
-				end
-			end
-		end
-	end)
-end)
-
 local Rayfield = {}
 function Rayfield:CreateWindow(_config)
 	local Window = {}
@@ -577,41 +528,42 @@ FarmTab:CreateToggle({
 	end
 })
 
--- ============ SUPER FAST REP ============
+-- ============ SUPER FAST REP (HASTA 20) ============
 local superRepOn = false
 local superRepBatch = 10
 local superRepInterval = 0.02
+
 FarmTab:CreateSlider({
-	Name = "Super Rep Batch (Velocidad)",
-	Range = {1, 10},
+	Name = "Super Rep Batch (Velocidad Máx 20)",
+	Range = {1, 20},
 	Increment = 1,
 	CurrentValue = superRepBatch,
 	Flag = "SuperRepBatch",
 	Callback = function(v)
 		v = math.floor((tonumber(v) or superRepBatch) + 0.5)
-		superRepBatch = math.clamp(v, 1, 10)
+		superRepBatch = math.clamp(v, 1, 20)
 	end
 })
 
 FarmTab:CreateButton({
-	Name = "⚡ Velocidad Baja (Batch 3)",
+	Name = "⚡ Velocidad Media (Batch 5)",
 	Callback = function()
-		superRepBatch = 3
-		Window:Notify({Title="Princes Hud", Content="Velocidad ajustada a 3", Duration=1})
+		superRepBatch = 5
+		Window:Notify({Title="Princes Hud", Content="Velocidad ajustada a 5", Duration=1})
 	end
 })
 FarmTab:CreateButton({
-	Name = "⚡ Velocidad Media (Batch 6)",
-	Callback = function()
-		superRepBatch = 6
-		Window:Notify({Title="Princes Hud", Content="Velocidad ajustada a 6", Duration=1})
-	end
-})
-FarmTab:CreateButton({
-	Name = "🚀 Velocidad Máxima (Batch 10)",
+	Name = "⚡ Velocidad Alta (Batch 10)",
 	Callback = function()
 		superRepBatch = 10
-		Window:Notify({Title="Princes Hud", Content="Velocidad ajustada a 10 (Máx)", Duration=1})
+		Window:Notify({Title="Princes Hud", Content="Velocidad ajustada a 10", Duration=1})
+	end
+})
+FarmTab:CreateButton({
+	Name = "🚀 VELOCIDAD MÁXIMA (Batch 20)",
+	Callback = function()
+		superRepBatch = 20
+		Window:Notify({Title="Princes Hud", Content="Velocidad ajustada a 20 (Máx Ultra)", Duration=1})
 	end
 })
 
