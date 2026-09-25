@@ -1,5 +1,5 @@
 -- ============ SISTEMA DE KEY (PRINCES HUD) ============
-local correctKey = "1"
+local correctKey = "humildeONhud"
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -82,7 +82,7 @@ local _eleriumWindow = library:AddWindow("Princes Hud", {
 	can_resize = not _isMobileUI,
 })
 
--- ============ BOTÓN FLOTANTE PARA OCULTAR/MOSTRAR EL HUB (100% FUNCIONAL) ============
+-- ============ BOTÓN FLOTANTE PARA OCULTAR/MOSTRAR SOLO EL HUB (100% SEGURO) ============
 local toggleGui = Instance.new("ScreenGui")
 toggleGui.Name = "PrincesHudToggle"
 toggleGui.ResetOnSpawn = false
@@ -103,21 +103,29 @@ floatBtn.Active = true
 floatBtn.Draggable = true
 floatBtn.Parent = toggleGui
 
--- Detectar automáticamente el ScreenGui del Hub creado por la librería
-local hubScreenGui = nil
+-- Detectar y cachear exclusivamente la GUI del Hub de Elerium
+local eleriumGui = nil
 task.spawn(function()
-	task.wait(0.6)
+	task.wait(1.5) -- Esperar a que cargue la interfaz de la librería
 	for _, gui in ipairs(CoreGui:GetChildren()) do
 		if gui:IsA("ScreenGui") and gui.Name ~= "PrincesHudToggle" and gui.Name ~= "PrincesHudKeySystem" then
-			hubScreenGui = gui
-			break
+			for _, desc in ipairs(gui:GetDescendants()) do
+				if desc:IsA("TextLabel") and desc.Text:find("Princes Hud") then
+					eleriumGui = gui
+					break
+				end
+			end
 		end
 	end
-	if not hubScreenGui then
+	if not eleriumGui then
 		for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
 			if gui:IsA("ScreenGui") and gui.Name ~= "PrincesHudToggle" and gui.Name ~= "PrincesHudKeySystem" then
-				hubScreenGui = gui
-				break
+				for _, desc in ipairs(gui:GetDescendants()) do
+					if desc:IsA("TextLabel") and desc.Text:find("Princes Hud") then
+						eleriumGui = gui
+						break
+					end
+				end
 			end
 		end
 	end
@@ -129,19 +137,11 @@ floatBtn.MouseButton1Click:Connect(function()
 	floatBtn.Text = hubOpen and "👑 Ocultar" or "👑 Mostrar"
 	
 	pcall(function()
-		if hubScreenGui then
-			hubScreenGui.Enabled = hubOpen
-		else
-			for _, gui in ipairs(CoreGui:GetChildren()) do
-				if gui:IsA("ScreenGui") and gui.Name ~= "PrincesHudToggle" and gui.Name ~= "PrincesHudKeySystem" then
-					gui.Enabled = hubOpen
-					hubScreenGui = gui
-				end
-			end
-			for _, gui in ipairs(LocalPlayer.PlayerGui:GetChildren()) do
-				if gui:IsA("ScreenGui") and gui.Name ~= "PrincesHudToggle" and gui.Name ~= "PrincesHudKeySystem" then
-					gui.Enabled = hubOpen
-					hubScreenGui = gui
+		if eleriumGui then
+			eleriumGui.Enabled = hubOpen
+			for _, desc in ipairs(eleriumGui:GetDescendants()) do
+				if desc:IsA("Frame") or desc:IsA("ScrollingFrame") then
+					desc.Visible = hubOpen
 				end
 			end
 		end
@@ -596,7 +596,6 @@ FarmTab:CreateToggle({
 
 -- ============ SUPER FAST REP ============
 local superRepOn = false
-local isMobileDevice = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 local superRepBatch = 10
 local superRepInterval = 0.02
 FarmTab:CreateSlider({
@@ -607,8 +606,7 @@ FarmTab:CreateSlider({
 	Flag = "SuperRepBatch",
 	Callback = function(v)
 		v = math.floor((tonumber(v) or superRepBatch) + 0.5)
-		local cap = 10
-		superRepBatch = math.clamp(v, 1, cap)
+		superRepBatch = math.clamp(v, 1, 10)
 	end
 })
 
