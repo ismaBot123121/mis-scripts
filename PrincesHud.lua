@@ -1,5 +1,5 @@
 -- ============ SISTEMA DE KEY (PRINCES HUD) ============
-local correctKey = "1234"
+local correctKey = "1"
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -528,10 +528,9 @@ FarmTab:CreateToggle({
 	end
 })
 
--- ============ SUPER FAST REP (HASTA 20) ============
+-- ============ SUPER FAST REP (OPTIMIZADO CON CONTROL DE BÚFER DE RED) ============
 local superRepOn = false
 local superRepBatch = 10
-local superRepInterval = 0.02
 
 FarmTab:CreateSlider({
 	Name = "Super Rep Batch (Velocidad Máx 20)",
@@ -563,7 +562,7 @@ FarmTab:CreateButton({
 	Name = "🚀 VELOCIDAD MÁXIMA (Batch 20)",
 	Callback = function()
 		superRepBatch = 20
-		Window:Notify({Title="Princes Hud", Content="Velocidad ajustada a 20 (Máx Ultra)", Duration=1})
+		Window:Notify({Title="Princes Hud", Content="Velocidad ajustada a 20 (Ultra Optimizado)", Duration=1})
 	end
 })
 
@@ -582,15 +581,23 @@ FarmTab:CreateToggle({
 					if h and h.Health > 0 then
 						local seat = getSeat(h)
 						local hasX2 = LocalPlayer:FindFirstChild("ownedGamepasses") and LocalPlayer.ownedGamepasses:FindFirstChild("x2 Rep Time")
-						local effective = superRepInterval
-						if hasX2 then effective = effective * 0.5 end
+						
+						-- Envío escalonado: evita saturar la red (previene ping alto y pérdida de paquetes)
 						for i = 1, superRepBatch do
 							if seat then
 								pcall(function() muscleEvent:FireServer("rep", seat) end)
 							else
 								pcall(function() muscleEvent:FireServer("rep") end)
 							end
+							-- Cada 5 peticiones, cede un frame para vaciar el búfer de red sin trabar el juego
+							if i % 5 == 0 then
+								RunService.Heartbeat:Wait()
+							end
 						end
+						
+						-- Espera dinámica inteligente basada en el tamaño del batch
+						local effective = math.max(0.03, superRepBatch * 0.002)
+						if hasX2 then effective = effective * 0.5 end
 						task.wait(effective)
 					else
 						task.wait(0.2)
@@ -745,7 +752,7 @@ task.spawn(function()
 			formatNumber(renasDay),
 			formatNumber(renasWeek),
 			formatNumber(targetRebirths),
-			timeToTarget
+	        timeToTarget
 		)
 
 		pcall(function()
